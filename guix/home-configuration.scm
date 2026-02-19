@@ -19,7 +19,7 @@
    (service home-files-service-type
             `((".zshrc" ,(local-file "/home/nicolas/repos/dotfiles/zsh/.zshrc"))
               (".config/emacs/init.el" ,(local-file "/home/nicolas/repos/emacs/init.el"))
-              (".config/emacs/init-async.el" ,(local-file "/home/nicolas/repos/emacs/init-async.el"))
+              (".config/emacs/async-init.el" ,(local-file "/home/nicolas/repos/emacs/async-init.el"))
               (".config/emacs/straight/versions"
                ,(local-file "/home/nicolas/repos/emacs/straight/versions" #:recursive? #t))
               (".config/emacs/early-init.el"
