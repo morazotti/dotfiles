@@ -7,7 +7,17 @@
              (gnu services networking)
              (gnu services ssh)
              (gnu services docker)
-             (gnu services syncthing))
+             (gnu services syncthing)
+             ;; Desktop/audio/bluetooth/printing (Arch JSON: KDE + pulseaudio + bluedevil + cups)
+             (gnu services desktop)
+             (gnu services xorg)
+             (gnu services sound)
+             (gnu services cups)
+             (gnu services bluetooth)
+             (gnu packages kde)
+             (gnu packages cups)
+             ;; For system packages mirrored from Arch JSON
+             (gnu packages syncthing))
 
 (operating-system
   (host-name "Golgotha")
@@ -17,7 +27,6 @@
   (kernel linux)
   (initrd microcode-initrd)
   (firmware (list linux-firmware))
-
   (keyboard-layout (keyboard-layout "us" "colemak"))
   (bootloader (bootloader-configuration
                (bootloader grub-bootloader)
@@ -47,6 +56,19 @@
                 (shell (file-append zsh "/bin/zsh")))
                %base-user-accounts))
 
+  ;; Pacotes “de sistema” para refletir user_configuration.json (KDE/SDDM/CUPS/Bluetooth).
+  ;; O grosso dos apps fica melhor no Guix Home.
+  (packages
+   (append
+    (list sddm
+          plasma
+          bluedevil
+          cups
+          ;; Arch JSON includes syncthing and docker; services are enabled below,
+          ;; but keeping the packages available system-wide is often convenient.
+          syncthing)
+    %base-packages))
+
   (services
    (append
     (list (service docker-service-type)
@@ -63,7 +85,20 @@
 
           (service openssh-service-type
                    (openssh-configuration
-                    (permit-root-login #t))))
+                    (permit-root-login #t)))
+
+          ;; Desktop stack (KDE + SDDM).
+          (service sddm-service-type)
+          (service plasma-desktop-service-type)
+
+          ;; Audio (Arch JSON: pulseaudio)
+          (service pulseaudio-service-type)
+
+          ;; Printing
+          (service cups-service-type)
+
+          ;; Bluetooth (needed for bluedevil to be useful)
+          (service bluetooth-service-type))
     %base-services)))
 
 ;; Opcional (e redundante aqui): estes macros são para conveniência quando
