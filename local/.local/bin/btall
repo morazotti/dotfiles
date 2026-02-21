@@ -1,0 +1,6 @@
+#!/bin/bash
+
+bluetoothctl power on
+# setxkbmap br -option ctrl:swapcaps -option kpdl:dot # for some reason i have to re-swap each time i connect to bt.
+devices=`bluetoothctl devices | sed "s/Device\ //" | dmenu -i -p "Which device do you want to connect?" | awk '{print $1}'`
+bluetoothctl connect $devices

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+[ "$1" != "" ] && echo "Outputting to file $1" || (echo "I need a filename." && exit)
+ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :0.0+0,0 -f alsa -ac 2 -i hw:0 $1

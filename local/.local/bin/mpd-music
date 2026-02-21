@@ -1,0 +1,10 @@
+#!/bin/bash
+
+MPD_HOST=127.0.0.1
+MPD_PORT=6600
+
+musiclist=`mpc -h $MPD_HOST -p $MPD_PORT playlist | rofi -dmenu -i -p "Which song to play?"`
+[ "$musiclist" = "" ] && exit
+song=`echo $musiclist | awk -F ' - ' '{print $2}'`
+mpc -h $MPD_HOST -p $MPD_PORT searchplay title "$song" && fyi -t 2000 "Now playing:" "$musiclist" #-i /usr/share/icons/breeze-dark/devices/64/media-optical-audio.svg -u low
+#mpc -h $MPD_HOST -p $MPD_PORT toggle

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+prog=`ps aux | grep nicolas| awk '{print $2,$NF}' | dmenu -p "Choose the process to kill" | awk '{print $1}'`  
+confirm=`dmenu -p "Type yes to confirm"`
+([ "$confirm"="yes" ] || [ "$confirm"="YES" ] || [ "$confirm"="y" ]) && kill -9 $prog 

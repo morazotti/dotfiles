@@ -1,0 +1,23 @@
+#!/bin/sh
+
+alias youtube-dl="yt-dlp -o '%(title)s.%(ext)s'"
+alias yta='youtube-dl -f bestaudio' 
+alias mpc='mpc -h $MPD_HOST -p $MPD_PORT'
+#alias dmenu='dmenu -sb #c72228'
+alias cat='bat'
+alias showcam='mpv --profile=low-latency --untimed --force-seekable=yes /dev/video0'
+alias ab='abook --config $HOME/.config/abook/abookrc --datafile $HOME/.config/abook/addressbook'
+alias db='abook --config $HOME/.config/abook/abookrc --datafile $HOME/.config/abook/databook'
+alias sb='abook --config $HOME/.config/abook/abookrc --datafile $HOME/.config/abook/studiobook'
+alias mbsync='mbsync -c "$XDG_CONFIG_HOME"/isync/mbsyncrc'
+alias mdb='mariadb -unicolas -p$(pass mariadb/password)'
+alias tmux='tmux -f "$XDG_CONFIG_HOME"/tmux/tmux.conf'
+alias monerod='monerod --data-dir "$XDG_DATA_HOME"/bitmonero'
+alias zshrc='/usr/bin/$EDITOR"" $HOME/.zshrc'
+alias ohmyzsh='$EDITOR $HOME/.oh-my-zsh/oh-my-zsh.sh'
+alias roam='cd $HOME/Documents/roam/'
+alias led='ledger -f $HOME/.config/emacs/private/gastos.ledger'
+alias arst='mise'
+alias conda-base='eval "$($HOME/.anaconda3/bin/conda shell.zsh hook)"'
+alias conda-bio='eval "conda-base && conda activate bio"'
+alias conda-torch='eval "conda-base && conda activate torch"'

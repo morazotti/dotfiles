@@ -1,0 +1,40 @@
+#!/bin/bash
+Help(){
+    echo "yt-to-lbry facilitates cloning from YouTube to LBRY using a list of files"
+    echo
+    echo "Uses lbrynet/lbry, youtube-dl and lbry-sync-ytdl"
+    echo
+    echo "Syntax: sendtolbry <-c @CHANNEL> [-b bid, DEFAULT=1.0] [-f FILENAME, DEFAULT=$HOME/lbry/playlists]"
+    echo "Playlist file must have a list of YouTube links"
+    echo "It automatically removes"
+    echo "    - Lines beggining with *"
+    echo "    - Lines beggining with #"
+    echo "    - Lines beggining with -*-"
+    echo "If your line begins with * DONE, it removes the next line."
+}
+
+bid=1.0
+filename=$HOME/lbry/playlists
+USERNAME=""
+
+while getopts "c:b:f:h" option; do
+    case $option in
+	b|bid)
+	    bid=${OPTARG};;
+	f|filename)
+	    filename=${OPTARG};;
+	c|channel)
+	    USERNAME=${OPTARG};;
+	h|help)
+	    Help
+	    exit;;
+    esac
+done
+
+[ "$USERNAME" = "" ] && Help && exit
+files=`cat $filename | sed "/^-*-/d;/^* DONE/,+1d;/^*/d;/^#/d;s/\[\[//g;s/\]\]//g"`
+ cd $HOME/lbry/
+ for i in $files; do
+     lbry-sync-ytdl $i --bid=$bid --channel=$USERNAME --optimize-video 
+ done
+

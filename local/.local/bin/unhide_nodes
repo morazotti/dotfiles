@@ -1,0 +1,15 @@
+#!/bin/python
+
+import os
+hn = os.popen("bspc query -N -n .hidden").read().split("\n")[:-1]
+hidden_nodes = {}
+for node in hn:
+    hidden_nodes[f'{node}'] = os.popen(f"xtitle {node}").read()
+string = ''
+for key, val in hidden_nodes.items():
+    string += val
+string = string[:-1]
+node_name = os.popen(f"echo '{string}' | dmenu -p 'Select which node do you wish to unhide'").read()
+for key, val in hidden_nodes.items():
+    if val == node_name:
+        os.popen(f"bspc node {key} -g hidden=off -a | notify-send '1 unhidden node' ")

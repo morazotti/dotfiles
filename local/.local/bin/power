@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+
+import os
+global now
+now = os.popen("bspc config top_padding").read().replace("\n","")
+
+def toggle_polybar(now):
+    if now == "38":
+        now = "0"
+    else:
+        now = "38"
+    return f"polybar-msg cmd toggle && bspc config top_padding {now}"
+
+power={'toggle polybar': toggle_polybar(now),
+       'lock screen': './$HOME/.bin/lock',
+       'suspend': 'systemctl suspend',
+       'reload bspwm': 'bspc wm -r && killall sxhkd && sxhkd',
+       'reboot': 'reboot',
+       'shutdown': 'shutdown -h now'} 
+labels=str(power.keys()).replace("dict_keys([","").replace("])","").replace(", ","\n").replace("'","")
+cmd = "echo '"+labels+"' | dmenu -i -p 'What do you wish to do?'"
+index = os.popen(cmd).read().replace("\n","")
+os.system(power[index])
+

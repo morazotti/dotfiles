@@ -1,0 +1,5 @@
+#!/bin/bash
+bat=`acpi -b | awk '{print $4}' | sed "s/\%,*//g"`
+chg=`acpi -b | awk '{print $3}' | sed "s/,//g"`
+[ "$chg" = "Discharging" ] || exit
+[[ $(($bat)) -lt 20 ]] && notify-send -u critical -i /usr/share/icons/breeze-dark/devices/64/battery.svg "Battery level at $bat%." "Please plug the computer in or suspend it."

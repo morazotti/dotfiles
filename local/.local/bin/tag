@@ -1,0 +1,23 @@
+#!/bin/sh
+
+picktags(){
+    local TAGS=$(mariadb -unicolas -p$(pass mariadb/password) -D FileTags -Bse "\
+           SELECT Tags.TagName FROM Tags;\
+	   " | tr " " "\n" | rofi -dmenu -i -multi-select -p "which tag(s) do you wish to add?" | sed 's/\S*/"&"/g')
+    echo $TAGS
+    return 0
+}
+
+SQLaddtags(){
+    mariadb -unicolas -p$(pass mariadb/password) -D FileTags -Be "SELECT FileID FROM Files WHERE FilePath in ($FILES);" # for FILE in $@; do
+    # 	FILEPATH=`readlink -f $FILE | sed 's/\S*/"&"/g'`
+    # 	mariadb -unicolas -p$(pass mariadb/password) -D FileTags -Be "SELECT * FROM Files WHERE FilePath = $FILEPATH;"
+    # done
+    return 0 
+}
+
+# TAGS=`picktags`
+# echo $TAGS
+FILES=`readlink -f $@ | sed 's/\S*/"&"/g'`
+FILES=`echo $FILES | sed 's/\s/,/g'`
+SQLaddtags

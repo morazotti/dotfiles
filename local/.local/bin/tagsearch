@@ -1,0 +1,54 @@
+#!/bin/sh
+
+search(){
+    local TAGS=$(mariadb -unicolas -p$(pass mariadb/password) -D FileTags -Bse "\
+	       SELECT Tags.TagName FROM Tags;\
+	       " | tr " " "\n" | rofi -dmenu -i -multi-select -p "which tag do you wish to search?" | sed 's/\S*/"&"/g')
+    local WHERE=""
+    for TAG in $TAGS; do
+	WHERE="$WHERE AND Tags.TagName IN ($TAG)"
+    done
+    WHERE=`echo $WHERE | sed 's/^AND//g'`
+    local FILES=$(mariadb -unicolas -p$(pass mariadb/password) -D FileTags -Bse "\
+	  SELECT Files.FilePath\
+	  FROM Files\
+	  JOIN FileTags ON Files.FileID = FileTags.FileID\
+	  JOIN Tags ON Tags.TagID = FileTags.TagID\
+	  WHERE $WHERE;")
+    echo $FILES
+    return 0 
+}
+
+option(){
+    OPTION=`echo 'open;show in dir;gather' | sed "s/;/\n/g" | rofi -dmenu `
+    #"what do you want to do with it?"`
+    case $OPTION in
+	"open")
+	    local FILE=`search` 
+	    [ -z $FILE ] && return 0
+	    xdg-open $(echo $FILE | sed 's/ /\n/g' | rofi -dmenu)
+	    ;;
+	"show in dir")
+	    local FILE=`search` 
+	    [ -z $FILE ] && return 0
+	    dolphin --select $(echo $FILE | sed 's/ /\n/g' | rofi -dmenu)
+	    ;;
+	"gather")
+	    local FILES=`search` 
+	    [ -z $FILES ] && return 0
+	    local NAME=`cat /dev/random | tr -dc a-f0-9 | head -c 40`
+	    local DIR="$HOME/.cache/tagtools/$NAME"
+	    mkdir -p $DIR 
+	    
+	    for FILE in $FILES; do
+		ln $FILE $DIR/
+	    done
+	    dolphin $DIR
+	    ;;
+	*)
+	    return 1 
+    esac
+    return 0
+}
+option
+# search | sed "s/ /\n/g" | fzf

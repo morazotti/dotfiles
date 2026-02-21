@@ -1,0 +1,13 @@
+#!/bin/python3
+import os
+import datetime as dt
+
+year, month, day, hour, minute, second, *_ = list(dt.datetime.now().timetuple())
+
+screenshot = {'Whole screen':f'maim -u -d 1 -q -g 1920x1080 | tee /home/nicolas/Pictures/scrots/"{year}-{month:02}-{day:02}-{hour:02}{minute:02}{second:02}_scrot.png" | xclip -selection clipboard -t image/png',
+              'Selection':f'maim -o -u -d 1 -q -s | tee /home/nicolas/Pictures/scrots/"{year}-{month:02}-{day:02}-{hour:02}{minute:02}{second:02}_scrot_sel.png" | xclip -selection clipboard -t image/png',
+              'Focused window':f'maim -o -d 1 -u -q -s | tee /home/nicolas/Pictures/scrots/"{year}-{month:02}-{day:02}-{hour:02}{minute:02}{second:02}_scrot_focus.png" | xclip -selection clipboard -t image/png'}
+
+keys = str(screenshot.keys()).replace("dict_keys([","").replace("])","").replace(", ","\n").replace("'","")
+cmd = "echo '"+keys+"' | dmenu -i -p 'How do you wish to print the screen?'"
+os.system(screenshot[os.popen(cmd).read().replace("\n","")])

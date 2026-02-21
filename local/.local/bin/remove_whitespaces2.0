@@ -1,0 +1,15 @@
+#!/bin/python
+from os import *
+import subprocess
+
+DIR = "/home/nicolas/Downloads/Deezloader/"
+os.chdir(DIR)
+# if listdir("."):
+#     for root, dirs, files in walk("."):
+#         for file in files:
+#             os.rename(file, file.replace(" ","_"))
+#             info = os.system(f"cat {file}")
+        
+file_info = subprocess.check_output(["ffprobe", "Seatbelts_-_Tank!.mp3"])
+
+print(file_info)

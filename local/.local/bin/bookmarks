@@ -1,0 +1,20 @@
+#!/bin/bash
+
+xdg-main(){
+    type=`echo $1 | awk -F: '{print $1}'`
+    case $type in
+	http*)
+	    exo-open --launch WebBrowser $1
+	    ;;
+	file)
+	    exo-open --launch FileManager $1
+	    ;;
+	file+rofi)
+	    $HOME/.bin/file_searcher $(echo $1 | awk -F":" '{print $2}' )
+	    ;;
+    esac
+}
+
+bookmark=`cat $HOME/.emacs.d/private/notes.org | sed "/^\** DONE/d" | grep -e file\.\*: -e http\.\*: | sed "s/^\** //g; s/^.*\[\[//g;s/\]\]$//g;s/\]\[/:::/g" | gawk -F':::' {'printf ("%-40s%-40s\n",$2, $1)'} | rofi -dmenu -l 5 -i -p "Which bookmark do you wish to open? " | awk '{print $NF}'` 
+
+[[ "$bookmark" = "" ]] || xdg-main $bookmark

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+open(){
+    [[ -f "$path/$file" ]] && exo-open "$path/$file" 2>/dev/null && exit;
+    [[ "$file" = "" ]] && exit;
+    [[ -d "$path/$file" ]] && path="$path/$file/";
+}
+
+exit="0"
+path=$1
+maxdepth=${2:-1}
+[[ $path =~ "$HOME" ]] || path=$HOME/$1
+
+while [[ "$exit" = "0" ]]; do
+    file=`find "$path" -maxdepth $maxdepth 2>/dev/null | grep -v '.git\|auto\|.ob-jupyter\|_minted*\|.ipynb_checkpoints'| sed "s-$path--g" | tail -n +2  | rofi -dmenu -i -p "Which file do you wish to open?"`
+    open $path/$file
+done

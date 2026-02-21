@@ -1,0 +1,8 @@
+###!/bin/bash
+###ICON=$HOME/Pictures/lock.png
+maim $HOME/.cache/screen.png
+TMPBG=$HOME/.cache/screen.png
+convert $TMPBG -scale 10% -scale 1000% $TMPBG
+convert $TMPBG -gravity center -matte $TMPBG
+i3lock -i $TMPBG
+#i3lock -u -f -r 10 -i $TMPBG #this one blurs the bg

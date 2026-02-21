@@ -1,0 +1,3 @@
+#!/bin/bash
+notmuch new &>/dev/null
+echo " $(notmuch search tag:unread | wc -l)"

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+[ ! -f ~/.bookmarks ] && touch ~/.bookmarks
+BOOKMARK_FILE=~/.bookmarks
+
+add_bm () {
+    echo "Adding $(pwd) to bookmarks"
+    [ "" = "$(grep $(pwd) $BOOKMARK_FILE)" ] && echo $(pwd) >> $BOOKMARK_FILE
+}
+
+remove_bm () {
+    echo "Removing $(pwd) from bookmarks"
+    grep -v "^$PWD$" $BOOKMARK_FILE > .bookmarks.tmp && mv .bookmarks.tmp $BOOKMARK_FILE
+}
+
+# if $1 is empty, run the following command
+if [ "" = "$1" ]; then
+    GOTO="$(cat $BOOKMARK_FILE | fzf)"
+    cd $GOTO
+fi
+
+case $1 in
+    add)
+	add_bm
+	;;
+    list)
+	cat $BOOKMARK_FILE
+	;;
+    rm)
+	remove_bm
+	;;
+    "")
+	exit 0
+	;;
+    *)
+	echo "Usage: $0 [add|list|rm]"
+	;;
+esac

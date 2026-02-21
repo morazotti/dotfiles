@@ -1,0 +1,2 @@
+#!/bin/bash
+find ~/Zotero/storage/ -iname "*.pdf" -type f -exec ln -vf {} ~/Documents/my_lib/pdfs/ \;

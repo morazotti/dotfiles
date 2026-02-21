@@ -1,0 +1,18 @@
+#!/bin/python
+
+from os import *
+
+DIR = "/home/nicolas/Downloads/Soulseek/"
+if listdir(DIR):
+    for i in range(3):
+        for root, dirs, files in walk(DIR):
+            for file in files:
+                name = path.join(root, file)
+                fixed_name = path.join(root, file.replace(' ','_'))
+                rename(name,fixed_name)
+            for file in dirs:
+                name = path.join(root, file)
+                fixed_name = path.join(root, file.replace(' ','_'))
+                rename(name,fixed_name)
+
+    system(f"rsync {DIR} ~/Music -azv --ignore-existing")

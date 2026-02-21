@@ -1,0 +1,117 @@
+#!/bin/bash
+
+free_hd(){
+    used="$(df -hH | grep -i '/dev/sda3' | awk '{print $3}')"
+    total="$(df -hH | grep -i '/dev/sda3' | awk '{print $2}')"
+    echo  $used / $total 
+}
+
+free_ram(){
+    used="$(free -h --si | grep -i 'mem' | awk '{print $3}')"
+    total="$(free -h --si | grep -i 'mem' | awk '{print $2}')"
+    echo  $used / $total | tr -d i 
+}
+
+# has_drive(){
+#     is_drive_active="$(ps aux | grep odrive | grep -v grep )"
+#     if [ "$is_drive_active" != "" ]; then
+# 	echo " | "
+#     fi
+# }
+# has_skype(){
+#     is_skype_active="$(ps aux | grep skype | grep -v grep )"
+#     if [ "$is_skype_active" != "" ]; then
+# 	echo " |"
+#     fi
+# }
+
+
+has_onedrive(){
+    is_onedrive_active="$(ps aux | grep onedrive | grep -v grep )"
+    if [ "$is_onedrive_active" != "" ]; then
+    	echo " |"
+    fi
+    
+}
+
+has_dropbox(){
+    is_dropbox_active="$(ps aux | grep dropbox | grep -v grep )"
+    if [ "$is_dropbox_active" != "" ]; then
+	echo " |"
+    fi
+}
+
+email(){
+    echo "  $(notmuch count tag:unread)" #" unread mails"
+}
+
+song(){
+    song=`mpc -h 127.0.0.1 -p 6601 | sed 1q`
+    is_playing=`mpc -h 127.0.0.1 -p 6601 | grep paused`
+    if [ "$is_playing" = "" ]; then
+	echo "$song "
+    fi
+    if [ "$is_playing" != "" ]; then
+	echo "$song "
+    fi
+}
+
+battery(){
+    bat=`acpi | tr , " " | awk '{print $3" "$4}'`
+    status=`echo $bat | awk '{print $1}'`
+    percent=`echo $bat | awk '{print $2}'| tr -d %`
+    if [ "$status" = "Full" ]; then
+	echo " Full"
+    fi
+    if [ "$status" = "Charging" ]; then
+	echo " $percent%"
+    fi
+    if [ "$status" = "Discharging" ]; then
+	case $percent in
+	    [0-1]*)
+		echo " $percent%"
+		;;
+	    [2-4]*)
+		echo " $percent%"
+		;;
+	    [5-6]*)
+		echo " $percent%"
+		;;
+	    [7-8]*)
+		echo " $percent%"
+		;;
+	    *) 
+		echo " $percent%"
+		;;
+	esac
+    fi
+}
+
+clock(){
+    text=`date +"%F %R" `
+    echo " $text"
+}
+
+internet(){
+    wifi=`nmcli device | grep wifi | awk '{$1=$2=$3=""; print $0}' | sed "s/^ *//g;1q"`
+    eth=`nmcli device | grep ethernet | awk '{$1=$2=$3=""; print $0}' | sed "s/^ *//g"`
+    [ "$eth" != "--" ] && echo " $eth |"
+    [ "$wifi" != "--" ] && echo " $wifi |"
+}
+
+volume(){
+    vol=`amixer | grep "Front Left: Playback" | awk '{print $(NF-1)}' | tr -d '[]%'`
+    is_mute="$(amixer | grep "Front Left: Playback" | awk '{print $NF}')"
+    if [ "$is_mute" = "[off]" ] ; then
+	echo "    $vol%"
+    else
+	echo "  $vol%"
+    fi
+}
+
+updates(){
+    upd=`pacman -Qu | wc -l`
+    echo " $upd"
+}
+
+echo " | $(song) | $(has_dropbox) $(has_onedrive)$(free_hd) | $(free_ram) | $(updates) | $(email) | $(volume) | $(internet) $(clock) | $(battery) "
