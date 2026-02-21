@@ -1,0 +1,4 @@
+#!/bin/bash
+/usr/bin/notmuch tag -inbox +fanchini from:newsletters-noreply@linkedin.com and subject:"Seleções arXiv"
+/usr/bin/notmuch tag +91103-FisExpA-2025 subject:"/91103..?/"
+/usr/bin/notmuch tag +ufscar from:"@ufscar.br"

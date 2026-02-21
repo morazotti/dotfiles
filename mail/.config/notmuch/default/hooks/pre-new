@@ -1,0 +1,2 @@
+#!/bin/bash
+/usr/bin/mbsync -c /home/nicolas/.config/isync/mbsyncrc -a 
