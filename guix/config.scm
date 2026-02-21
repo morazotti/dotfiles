@@ -17,7 +17,10 @@
              (gnu packages kde)
              (gnu packages cups)
              ;; For system packages mirrored from Arch JSON
-             (gnu packages syncthing))
+             (gnu packages syncthing)
+             ;; Flatpak support (for running non-Guix desktop apps)
+             (gnu packages flatpak)
+             (gnu services flatpak))
 
 (operating-system
   (host-name "Golgotha")
@@ -66,7 +69,9 @@
           cups
           ;; Arch JSON includes syncthing and docker; services are enabled below,
           ;; but keeping the packages available system-wide is often convenient.
-          syncthing)
+          syncthing
+          ;; Flatpak CLI (service below adds the system integration)
+          flatpak)
     %base-packages))
 
   (services
@@ -98,7 +103,10 @@
           (service cups-service-type)
 
           ;; Bluetooth (needed for bluedevil to be useful)
-          (service bluetooth-service-type))
+          (service bluetooth-service-type)
+
+          ;; Flatpak (system-wide integration; add Flathub per-user)
+          (service flatpak-service-type))
     %base-services)))
 
 ;; Opcional (e redundante aqui): estes macros são para conveniência quando
