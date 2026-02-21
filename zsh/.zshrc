@@ -120,7 +120,6 @@ vterm_printf(){
 [[ $TERM == "dumb" ]] && unsetopt zle && PS1='$ '
 [ -n "$NNNLVL" ] && PS1="N$NNNLVL $PS1"
 
-[ -f "/home/nicolas/.ghcup/env" ] && . "/home/nicolas/.ghcup/env" # ghcup-env
 if [ "$(uname -a | cut -d' ' -f4 | cut -d'-' -f2)" = "Ubuntu" ]; then
     source /usr/share/doc/fzf/examples/key-bindings.zsh
     source /usr/share/doc/fzf/examples/completion.zsh
