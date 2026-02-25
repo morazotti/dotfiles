@@ -1,0 +1,10 @@
+[Unit]
+Description=Run clean-org-persist every 2 days
+
+[Timer]
+OnUnitActiveSec=48h
+Persistent=true
+Unit=clean-org-persist.service
+
+[Install]
+WantedBy=timers.target

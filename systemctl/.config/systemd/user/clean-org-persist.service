@@ -1,0 +1,6 @@
+[Unit]
+Description=Clean Org persist cache (~/.cache/org-persist)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -lc 'rm -rf -- /home/nicolas/.cache/org-persist/*'
