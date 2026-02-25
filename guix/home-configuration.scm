@@ -62,6 +62,12 @@
                      (local-file (string-append emacs-repo "/" path))))))
        emacs-items))
 
+(define %excalidraw-export
+  #~(begin
+      (use-modules (guix build utils))
+      (invoke "mise" "install" "npm")
+      (invoke "mise" "use" "npm")
+      (invoke "npm" "install" "--global" "excalidraw_export")))
 
 (home-environment
  (packages
@@ -121,7 +127,7 @@
 
    (service home-xdg-configuration-files-service-type
             emacs-xdg-entries)
-
+   (simple-service 'excalidraw-export-installer home-activation-service-type %excalidraw-export) 
    ;; Flatpak: you still need to add Flathub once (see notes below), then install Bottles.
    ;; We don't manage the Flatpak installs declaratively here because Flatpak keeps its own
    ;; state in ~/.local/share/flatpak.
