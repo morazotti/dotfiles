@@ -4,5 +4,6 @@ export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME"/pass
 
 QT_QPA_PLATFORMTHEME="qt5ct"
+xmodmap -e "keycode 147 = dead_greek dead_greek dead_greek dead_greek"
 
 [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env" # ghcup-env
