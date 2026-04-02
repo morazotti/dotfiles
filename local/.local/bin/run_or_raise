@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# O primeiro argumento é o executável (ex: emacs)
+# O segundo (opcional) é a classe da janela (ex: Emacs)
+CMD=$1
+CLASS=${2:-$1}
+
+if wmctrl -xl | grep -i "$CLASS" > /dev/null; then
+    # O -x busca pela WM_CLASS, que é mais preciso que o título
+    wmctrl -x -a "$CLASS"
+else
+    # Lança o comando em background e silencia a saída
+    $CMD > /dev/null 2>&1 &
+fi
