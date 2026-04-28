@@ -3,14 +3,14 @@ include "%L"
 
 <Multi_key> <h> <h>		: "ℏ"  # hbar
 
-<Multi_key> <-> <`>		: "∓"  # mp
-<Multi_key> <`> <->		: "±"  # pm
+<Multi_key> <m> <p>		: "∓"  # mp
+<Multi_key> <p> <m>		: "±"  # pm
 <Multi_key> <r> <o> <f> <l>	: 🤣 # ROFL
 
 # Calculus & Vector Calculus
 <Multi_key> <p> <d>		: "∂"   # Partial derivative
 <Multi_key> <n> <a> <b>		: "∇"   # Nabla / Del operator
-<Multi_key> <i> <n> <t>		: "∫"   # Integral
+<Multi_key> <i> <n> <t>		: "∫"   # 
 
 # Algebra & Relations
 <Multi_key> <8> <8>		: "∞"   # Infinity
@@ -42,7 +42,7 @@ include "%L"
 <Multi_key> <g> <c>		: "χ" U03C7 # GREEK SMALL LETTER CHI
 <Multi_key> <g> <y>		: "ψ" U03C8 # GREEK SMALL LETTER PSI
 <Multi_key> <g> <w>		: "ω" U03C9 # GREEK SMALL LETTER OMEGA
-<Multi_key> <g> <Multi_key>	: "ς" U03C2 # GREEK SMALL LETTER FINAL SIGMA
+<Multi_key> <g> <Multi_key> <s>	: "ς" U03C2 # GREEK SMALL LETTER FINAL SIGMA
 
 # --- Uppercase ---
 <Multi_key> <g> <A>		: "Α" U0391 # GREEK CAPITAL LETTER ALPHA
@@ -70,11 +70,11 @@ include "%L"
 <Multi_key> <g> <Y>		: "Ψ" U03A8 # GREEK CAPITAL LETTER PSI
 <Multi_key> <g> <W>		: "Ω" U03A9 # GREEK CAPITAL LETTER OMEGA
 
-# # --- Math & Physics Variants (double-tap the letter) ---
-# <Multi_key> <g> <e> <e>	: "ϵ" U03F5 # GREEK LUNATE EPSILON SYMBOL
-# <Multi_key> <g> <q> <q>	: "ϑ" U03D1 # GREEK THETA SYMBOL
-# <Multi_key> <g> <k> <k>	: "ϰ" U03F0 # GREEK KAPPA SYMBOL
-# <Multi_key> <g> <f> <f>	: "ϕ" U03D5 # GREEK PHI SYMBOL
-# <Multi_key> <g> <r> <r>	: "ϱ" U03F1 # GREEK RHO SYMBOL
-# <Multi_key> <g> <p> <p>	: "ϖ" U03D6 # GREEK PI SYMBOL
-# <Multi_key> <g> <D> <D>	: "∇" U2207 # NABLA / DEL (Bonus)
+# --- Math & Physics Variants (double-tap the letter) ---
+<Multi_key> <g> <Multi_key> <e>	: "ϵ" U03F5 # GREEK LUNATE EPSILON SYMBOL
+<Multi_key> <g> <Multi_key> <q>	: "ϑ" U03D1 # GREEK THETA SYMBOL
+<Multi_key> <g> <Multi_key> <k>	: "ϰ" U03F0 # GREEK KAPPA SYMBOL
+<Multi_key> <g> <Multi_key> <f>	: "ϕ" U03D5 # GREEK PHI SYMBOL
+<Multi_key> <g> <Multi_key> <r>	: "ϱ" U03F1 # GREEK RHO SYMBOL
+<Multi_key> <g> <Multi_key> <p>	: "ϖ" U03D6 # GREEK PI SYMBOL
+<Multi_key> <g> <Multi_key> <D>	: "∇" U2207 # NABLA / DEL (Bonus)
