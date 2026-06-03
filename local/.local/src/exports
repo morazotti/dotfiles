@@ -19,6 +19,7 @@ export KDEHOME="$XDG_CONFIG_HOME"/kde
 export MACHINE_STORAGE_PATH="$XDG_DATA_HOME"/docker-machine
 export MATHEMATICA_USERBASE="$XDG_CONFIG_HOME"/mathematica
 export OPENAI_API_KEY=$(gpg2 -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | awk '/api.openai.com/ {print $NF}')
+export GEMINI_API_KEY=$(gpg2 -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | awk '/generativelanguage.googleapis.com/ {print $NF}')
 export NVM_DIR="$XDG_DATA_HOME"/nvm
 export NMBGIT="$XDG_DATA_HOME"/notmuch/nmbug
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME"/pass
