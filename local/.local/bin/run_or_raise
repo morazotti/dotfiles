@@ -5,10 +5,38 @@
 CMD=$1
 CLASS=${2:-$1}
 
-if wmctrl -xl | grep -i "$CLASS" > /dev/null; then
-    # O -x busca pela WM_CLASS, que é mais preciso que o título
-    wmctrl -x -a "$CLASS"
+if [ -n "$WAYLAND_DISPLAY" ]; then
+    # Wayland (KDE Plasma usando kdotool)
+    if ! command -v kdotool &> /dev/null; then
+        notify-send "run_or_raise" "Erro: kdotool não está instalado." --icon=dialog-error
+        echo "Erro: kdotool não está instalado." >&2
+        exit 1
+    fi
+
+    ID=$(kdotool search --class "$CLASS" 2>/dev/null | head -n 1)
+    if [ -z "$ID" ]; then
+        ID=$(kdotool search "$CLASS" 2>/dev/null | head -n 1)
+    fi
+
+    if [ -n "$ID" ]; then
+        kdotool windowactivate "$ID"
+    else
+        # Lança o comando em background e silencia a saída
+        $CMD > /dev/null 2>&1 &
+    fi
 else
-    # Lança o comando em background e silencia a saída
-    $CMD > /dev/null 2>&1 &
+    # X11 (usando wmctrl)
+    if ! command -v wmctrl &> /dev/null; then
+        notify-send "run_or_raise" "Erro: wmctrl não está instalado." --icon=dialog-error
+        echo "Erro: wmctrl não está instalado." >&2
+        exit 1
+    fi
+
+    if wmctrl -xl | grep -i "$CLASS" > /dev/null; then
+        # O -x busca pela WM_CLASS, que é mais preciso que o título
+        wmctrl -x -a "$CLASS"
+    else
+        # Lança o comando em background e silencia a saída
+        $CMD > /dev/null 2>&1 &
+    fi
 fi
