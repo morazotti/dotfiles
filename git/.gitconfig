@@ -4,6 +4,10 @@
 [user]
 	email = nicolas.morazotti@gmail.com
 	name = nmorazotti
+	signingkey = AFA38F6D475413EAC5C44E99B8DA0D8D3EDB2785
 
 [url "git@github.com:Morazotti/"]
      insteadOf = me:
+
+[commit]
+      gpgsign = true
