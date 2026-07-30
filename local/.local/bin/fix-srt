@@ -1,0 +1,9 @@
+# Adiciona o BOM do UTF-8 em legendas pra TV não surtar
+fix-srt() {
+    for f in "$@"; do
+        dos2unix "$f" 2>/dev/null
+        sed -i '1s/^\xef\xbb\xbf//' "$f"  # limpa se já tiver
+        sed -i '1s/^/\xef\xbb\xbf/' "$f"  # aplica o BOM bonitinho
+        echo "Legenda $f sanitizada com BOM!"
+    done
+}
