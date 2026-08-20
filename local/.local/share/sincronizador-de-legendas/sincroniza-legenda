@@ -7,12 +7,12 @@ if [ -z "$TARGET_DIR" ] || [ ! -d "$TARGET_DIR" ]; then
     exit 1
 fi
 
-executable=$(command -v rsync >/dev/null 2>&1 && echo "rsync -vP -W --inplace" || echo "cp")
-
 # Acha o caminho real resolvendo o link simbólico
 SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 # Chama o Python isolado pelo pescoço
 VENV_PYTHON="$SCRIPT_DIR/whisper-env/bin/python"
+
+export LD_LIBRARY_PATH=$PWD/whisper-env/lib/python3.14/site-packages/nvidia/cublas/lib:$LD_LIBRARY_PATH
 
 WORK_DIR="$HOME/.cache/sincronizador_work_$$"
 mkdir -p "$WORK_DIR"
@@ -37,17 +37,18 @@ for video in "$TARGET_DIR"/**/*.{mkv,mp4}; do
     
     echo "================================================="
     echo "[+] Processando: $base_video"
-    echo "[*] Trazendo o vídeo pro SSD (na força bruta do rsync)..."
+    echo "[*] Trazendo o vídeo pro SSD..."
     
     # Barreira 1: Se o rsync capotar, a gente aborta antes de piorar
-    if ! rsync -vP -W --inplace "$video" "$WORK_DIR/"; then
-        echo "[!] A rede piscou e o rsync arregou. Pulando este episódio."
-        rm -f "$WORK_DIR"/*
-        continue
-    fi
+    cp "$video" "$WORK_DIR/$base_video"
+    # if ! rsync -vP -W --inplace "$video" "$WORK_DIR/"; then
+    #     echo "[!] A rede piscou e o rsync arregou. Pulando este episódio."
+    #     rm -f "$WORK_DIR"/*
+    #     continue
+    # fi
 
     # Traz a legenda (o cp resolve isso num milissegundo)
-    cp "$legenda_rede" "$WORK_DIR/"
+    cp "$legenda_rede" "$WORK_DIR/$base_nome.srt"
 
     video_local="$WORK_DIR/$base_video"
     legenda_pt_local="$WORK_DIR/$base_nome.srt"
@@ -77,7 +78,7 @@ for video in "$TARGET_DIR"/**/*.{mkv,mp4}; do
         mv "$legenda_rede" "$legenda_bak_rede"
 
         echo "[*] Salvando a legenda perfeita no lugar da original..."
-        $executable "$legenda_sync_local" "$legenda_rede"
+        cp "$legenda_sync_local" "$legenda_rede"
         
         echo "[+] Sucesso! Arquivo pronto."
     else
