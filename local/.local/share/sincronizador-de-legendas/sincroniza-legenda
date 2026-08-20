@@ -1,60 +1,94 @@
 #!/bin/bash
 
-# Se você rodar o script e esquecer de passar a pasta, ele te avisa em vez de infartar.
 TARGET_DIR="${1}"
 
 if [ -z "$TARGET_DIR" ] || [ ! -d "$TARGET_DIR" ]; then
-    echo "Uso: ./sincroniza.sh /caminho/para/a/pasta/das/series"
+    echo "Uso: sincroniza_legenda /caminho/do/mount/do/raspberry"
     exit 1
 fi
 
-# Magia negra do Bash para descobrir o diretório real onde ESTE script está salvo
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+executable=$(command -v rsync >/dev/null 2>&1 && echo "rsync -vP -W --inplace" || echo "cp")
 
-export LD_LIBRARY_PATH=$SCRIPT_DIR/whisper-env/lib/python3.14/site-packages/nvidia/cublas/lib:$LD_LIBRARY_PATH
+# Acha o caminho real resolvendo o link simbólico
+SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+# Chama o Python isolado pelo pescoço
+VENV_PYTHON="$SCRIPT_DIR/whisper-env/bin/python"
 
-# Ativa o ambiente virtual com base no caminho do script, não importa de onde você chamou
-source "$SCRIPT_DIR/whisper-env/bin/activate"
+WORK_DIR="$HOME/.cache/sincronizador_work_$$"
+mkdir -p "$WORK_DIR"
 
-echo "Modo trator ativado. Varrendo tudo dentro de: $TARGET_DIR"
+echo "Modo trator ativado. Área de trabalho local no SSD: $WORK_DIR"
 
-# Liga o globstar para o ** significar "entre em todas as subpastas recursivamente"
 shopt -s nullglob globstar
 
-# Pega qualquer mkv ou mp4 no diretório alvo e seus filhos
 for video in "$TARGET_DIR"/**/*.{mkv,mp4}; do
+    base_video="$(basename "$video")"
+    dir_video="$(dirname "$video")"
+    base_nome="${base_video%.*}"
     
-    echo $PWD
-    base="${video%.*}"
-    legenda_pt="${base}.srt"
-    ./fix-srt "$legenda_pt"
-    legenda_sync="${base}.sync.srt"
-    legenda_en="${base}.en.srt"
+    # Mapeamento da rede
+    legenda_rede="$dir_video/$base_nome.srt"
+    legenda_bak_rede="$dir_video/$base_nome.srt.bak"
 
-    # Se não tem legenda em português com o mesmo nome na mesma pasta, pula pro próximo
-    if [ ! -f "$legenda_pt" ]; then
+    # Se não tem a legenda zoada, pula
+    if [ ! -f "$legenda_rede" ]; then
+        continue
+    fi
+    
+    echo "================================================="
+    echo "[+] Processando: $base_video"
+    echo "[*] Trazendo o vídeo pro SSD (na força bruta do rsync)..."
+    
+    # Barreira 1: Se o rsync capotar, a gente aborta antes de piorar
+    if ! rsync -vP -W --inplace "$video" "$WORK_DIR/"; then
+        echo "[!] A rede piscou e o rsync arregou. Pulando este episódio."
+        rm -f "$WORK_DIR"/*
         continue
     fi
 
-    echo "================================================="
-    echo "[+] Processando: $video"
-    
-    # Chama os scripts Python usando o caminho absoluto
-    python "$SCRIPT_DIR/ancora.py" "$video"
-    python "$SCRIPT_DIR/limpa_encoding.py" "$legenda_pt"
+    # Traz a legenda (o cp resolve isso num milissegundo)
+    cp "$legenda_rede" "$WORK_DIR/"
 
-    if [ -f "$legenda_en" ]; then
-        echo "[*] ALASS: Alinhando os tempos..."
-        alass "$legenda_en" "$legenda_pt" "$legenda_sync"
-        
-        # Apaga o rastro e deixa só o que importa
-        rm "$legenda_en"
-	mv "$legenda_pt" "$legenda_pt.bak"
-	mv "$legenda_sync" "$legenda_pt"
-        echo "[+] Sucesso! Arquivo gerado."
-    else
-        echo "[!] O Whisper engasgou nesse arquivo e não gerou a âncora."
+    video_local="$WORK_DIR/$base_video"
+    legenda_pt_local="$WORK_DIR/$base_nome.srt"
+    legenda_en_local="$WORK_DIR/$base_nome.en.srt"
+    legenda_sync_local="$WORK_DIR/$base_nome.sync.srt"
+
+    echo "[*] Testando se o arquivo copiado não é um zumbi decapitado..."
+    # Barreira 2: O ffprobe tenta ler a estrutura do arquivo. Se falhar, é lixo.
+    if ! ffprobe -v error -i "$video_local" > /dev/null 2>&1; then
+        echo "[!] O arquivo chegou corrompido e o ffprobe infartou."
+        echo "[!] Abortando missão para poupar o Python..."
+        rm -f "$WORK_DIR"/*
+        continue
     fi
+
+    echo "[*] Chamando o Whisper na placa de vídeo..."
+    "$VENV_PYTHON" "$SCRIPT_DIR/ancora.py" "$video_local"
+    
+    echo "[*] Vacinando o encoding da legenda..."
+    "$VENV_PYTHON" "$SCRIPT_DIR/limpa_encoding.py" "$legenda_pt_local"
+
+    if [ -f "$legenda_en_local" ]; then
+        echo "[*] ALASS: Alinhando os tempos..."
+        alass "$legenda_en_local" "$legenda_pt_local" "$legenda_sync_local"
+        
+        echo "[*] Transformando a legenda velha em backup (.bak)..."
+        mv "$legenda_rede" "$legenda_bak_rede"
+
+        echo "[*] Salvando a legenda perfeita no lugar da original..."
+        $executable "$legenda_sync_local" "$legenda_rede"
+        
+        echo "[+] Sucesso! Arquivo pronto."
+    else
+        echo "[!] O Whisper engasgou. Âncora não gerada."
+    fi
+
+    echo "[*] Limpando o SSD..."
+    rm -f "$WORK_DIR"/*
 done
 
-echo "Terminou, chefe. O HD inteiro já deve estar com a legenda no tempo certo."
+rm -rf "$WORK_DIR"
+
+echo "================================================="
+echo "Acabou a brincadeira. Tudo renomeado e no esquema lá no Raspberry."
