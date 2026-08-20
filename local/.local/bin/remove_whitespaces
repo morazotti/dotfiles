@@ -2,7 +2,7 @@
 
 from os import *
 
-DIR = "/home/nicolas/Downloads/Soulseek/"
+DIR = "/home/nicolas/Downloads/music/"
 if listdir(DIR):
     for i in range(3):
         for root, dirs, files in walk(DIR):

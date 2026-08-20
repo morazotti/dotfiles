@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Se você rodar o script e esquecer de passar a pasta, ele te avisa em vez de infartar.
+TARGET_DIR="${1}"
+
+if [ -z "$TARGET_DIR" ] || [ ! -d "$TARGET_DIR" ]; then
+    echo "Uso: ./sincroniza.sh /caminho/para/a/pasta/das/series"
+    exit 1
+fi
+
+# Magia negra do Bash para descobrir o diretório real onde ESTE script está salvo
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+
+export LD_LIBRARY_PATH=$SCRIPT_DIR/whisper-env/lib/python3.14/site-packages/nvidia/cublas/lib:$LD_LIBRARY_PATH
+
+# Ativa o ambiente virtual com base no caminho do script, não importa de onde você chamou
+source "$SCRIPT_DIR/whisper-env/bin/activate"
+
+echo "Modo trator ativado. Varrendo tudo dentro de: $TARGET_DIR"
+
+# Liga o globstar para o ** significar "entre em todas as subpastas recursivamente"
+shopt -s nullglob globstar
+
+# Pega qualquer mkv ou mp4 no diretório alvo e seus filhos
+for video in "$TARGET_DIR"/**/*.{mkv,mp4}; do
+    
+    echo $PWD
+    base="${video%.*}"
+    legenda_pt="${base}.srt"
+    ./fix-srt "$legenda_pt"
+    legenda_sync="${base}.sync.srt"
+    legenda_en="${base}.en.srt"
+
+    # Se não tem legenda em português com o mesmo nome na mesma pasta, pula pro próximo
+    if [ ! -f "$legenda_pt" ]; then
+        continue
+    fi
+
+    echo "================================================="
+    echo "[+] Processando: $video"
+    
+    # Chama os scripts Python usando o caminho absoluto
+    python "$SCRIPT_DIR/ancora.py" "$video"
+    python "$SCRIPT_DIR/limpa_encoding.py" "$legenda_pt"
+
+    if [ -f "$legenda_en" ]; then
+        echo "[*] ALASS: Alinhando os tempos..."
+        alass "$legenda_en" "$legenda_pt" "$legenda_sync"
+        
+        # Apaga o rastro e deixa só o que importa
+        rm "$legenda_en"
+	mv "$legenda_pt" "$legenda_pt.bak"
+	mv "$legenda_sync" "$legenda_pt"
+        echo "[+] Sucesso! Arquivo gerado."
+    else
+        echo "[!] O Whisper engasgou nesse arquivo e não gerou a âncora."
+    fi
+done
+
+echo "Terminou, chefe. O HD inteiro já deve estar com a legenda no tempo certo."
