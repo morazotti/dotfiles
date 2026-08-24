@@ -1,0 +1,285 @@
+#!/usr/bin/python3
+"""
+Universal Music Library Organizer
+=================================
+This script automatically organizes music downloads into the following structure:
+  <artist>/<album>/<track>_-_<title>.<extension>
+
+Features:
+- 100% Generic: No hardcoded pop artists, songs, or album names.
+- Case-insensitive metadata: Reads tags using ffprobe.
+- Two-Pass system:
+  - Pass 1: Maps audio files correctly and tracks target directories.
+  - Pass 2: Automatically binds companion files (covers, booklets) to sibling audio folders.
+- Generic regular expressions:
+  - Removes translation text/brackets from artists (e.g., "Junko Ohashi (大橋純子)" -> "Junko Ohashi").
+  - Removes vinyl/rip/metadata clutter from album titles.
+- Special Villa-Lobos mapping: Explicitly requested composer-level organization for Bachianas.
+- Prunes empty folders after successful organization.
+- Moves the organized artist directories into your primary music folder (~/Music) at the end,
+  recursively merging files if folders already exist.
+
+Usage:
+  python3 organizer.py
+"""
+
+import os
+import shutil
+import json
+import subprocess
+import sys
+import re
+
+# Detect the directories
+MUSIC_DIR = os.path.expanduser("~/Downloads/music")
+DEST_DIR = os.path.expanduser("~/Music")
+
+def get_metadata(file_path):
+    """Retrieves audio format metadata using ffprobe."""
+    try:
+        cmd = [
+            "ffprobe", 
+            "-v", "quiet", 
+            "-print_format", "json", 
+            "-show_format", 
+            file_path
+        ]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        data = json.loads(result.stdout)
+        return data.get("format", {})
+    except Exception as e:
+        print(f"Error reading metadata for {file_path}: {e}", file=sys.stderr)
+        return None
+
+def clean_spaces(text):
+    """Replaces spaces with underscores."""
+    if not text:
+        return ""
+    return text.replace(" ", "_")
+
+def sanitize_name(text):
+    """Sanitizes folders/filenames to prevent filesystem issues."""
+    if not text:
+        return ""
+    # Convert slashes and backslashes to hyphens
+    text = text.replace("/", "-").replace("\\", "-")
+    # Replace spaces with underscores
+    return clean_spaces(text)
+
+def clean_artist_name(artist):
+    """Generic artist cleaning (e.g., stripping bracketed translations or commentary)."""
+    if not artist:
+        return "Unknown_Artist"
+    # Remove text in parentheses or brackets (e.g., "Junko Ohashi (大橋純子)" -> "Junko Ohashi")
+    artist = re.sub(r"\s*[\(\[].*?[\)\]]", "", artist)
+    return sanitize_name(artist.strip())
+
+def clean_album_name(album):
+    """Generic album cleaning (stripping rip info, source info, or SPSO credits)."""
+    if not album:
+        return "Unknown_Album"
+    # Strip any brackets containing "rip", "vinyl", "SPSO", "panam", etc.
+    album = re.sub(r"\s*\((.*?)(rip|vinyl|SPSO|panam|source)(.*?)\)", "", album, flags=re.IGNORECASE)
+    # Strip any generic empty parentheses/brackets left
+    album = re.sub(r"\s*[\(\[].*?[\)\]]", "", album)
+    return sanitize_name(album.strip())
+
+def merge_move(src, dst):
+    """Recursively moves and merges files from src to dst to prevent overwriting existing folders."""
+    if os.path.isdir(src):
+        os.makedirs(dst, exist_ok=True)
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            merge_move(s, d)
+        if not os.listdir(src):
+            os.rmdir(src)
+    else:
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        if os.path.exists(dst):
+            # Overwrite or remove duplicate source to keep space clean
+            try:
+                os.remove(src)
+            except Exception:
+                pass
+        else:
+            shutil.move(src, dst)
+
+def run():
+    print(f"Universal Music Organizer - Scanning: {MUSIC_DIR}\n")
+    
+    audio_files = []
+    companion_files = []
+    
+    # Scan the folder structure
+    for root, dirs, files in os.walk(MUSIC_DIR):
+        for file in files:
+            # Skip this script itself
+            if file == os.path.basename(__file__):
+                continue
+                
+            full_path = os.path.join(root, file)
+            ext = os.path.splitext(file)[1].lower()
+            
+            if ext in [".mp3", ".flac", ".m4a", ".ogg", ".wav"]:
+                audio_files.append(full_path)
+            else:
+                companion_files.append(full_path)
+                
+    # Dictionary to map: source_directory -> destination_artist_album_directory
+    src_dir_to_dst_dir = {}
+    moves = []
+    
+    # -----------------------------------------------------------------
+    # PASS 1: Process Audio Files and build the directory mappings
+    # -----------------------------------------------------------------
+    for src in audio_files:
+        rel_path = os.path.relpath(src, MUSIC_DIR)
+        parts = rel_path.split(os.sep)
+        ext = os.path.splitext(src)[1]
+        
+        # Get case-insensitive tags
+        meta = get_metadata(src)
+        tags = meta.get("tags", {}) if meta else {}
+        tags_low = {k.lower(): v for k, v in tags.items()}
+        
+        # 1. Determine Artist
+        artist_tag = tags_low.get("artist", "").strip()
+        album_artist_tag = tags_low.get("album_artist", "").strip()
+        composer_tag = tags_low.get("composer", "").strip()
+        
+        # Priority: Artist Tag -> Album Artist Tag -> Composer Tag
+        artist_name = artist_tag or album_artist_tag or composer_tag
+        
+        # Villa-Lobos composer-level requested rule
+        if "villa-lobos" in artist_name.lower() or "villa-lobos" in composer_tag.lower() or parts[0] == "Villa-Lobos":
+            artist = "Villa-Lobos"
+        elif artist_name:
+            artist = clean_artist_name(artist_name)
+        else:
+            # Fallback to current top-level folder
+            artist = sanitize_name(parts[0])
+            
+        # 2. Determine Album
+        album_tag = tags_low.get("album", "").strip()
+        
+        # Villa-Lobos CD-to-Volume mapping
+        if artist == "Villa-Lobos":
+            if "CD 4" in album_tag:
+                album = "Bachianas_Brasileiras_Nos._1,_4,_5,_6"
+            elif "CD 5" in album_tag:
+                album = "Bachianas_Brasileiras_Nos._2,_3,_4"
+            elif "CD 6" in album_tag:
+                album = "Bachianas_Brasileiras_Nos._7,_9,_8"
+            else:
+                album = clean_album_name(album_tag)
+        elif album_tag:
+            album = clean_album_name(album_tag)
+        else:
+            # Fallback to parent folder name
+            if len(parts) > 2:
+                album = sanitize_name(parts[-2])
+            else:
+                album = "Unknown_Album"
+                
+        # 3. Determine Filename
+        # Track padding
+        track = tags_low.get("track", "")
+        if track:
+            try:
+                track_num = int(track.split("/")[0])
+                track_str = f"{track_num:02d}"
+            except ValueError:
+                track_str = track.zfill(2)
+        else:
+            # Try parsing track number from current filename
+            track_match = re.search(r"^\d+", parts[-1])
+            if track_match:
+                track_str = f"{int(track_match.group(0)):02d}"
+            else:
+                track_str = "00"
+                
+        # Title
+        title = tags_low.get("title", "")
+        if not title:
+            # Fallback to clean filename without track prefix
+            base_name = os.path.splitext(parts[-1])[0]
+            title = re.sub(r"^\d+\s*[-_]?\s*", "", base_name)
+            
+        title_clean = sanitize_name(title)
+        filename = f"{track_str}_-_{title_clean}{ext}"
+        
+        # Compile target path
+        dst_rel = os.path.join(artist, album, filename)
+        moves.append((src, os.path.join(MUSIC_DIR, dst_rel)))
+        
+        # Save directory mapping
+        src_dir = os.path.dirname(src)
+        src_dir_to_dst_dir[src_dir] = os.path.join(artist, album)
+        
+    # -----------------------------------------------------------------
+    # PASS 2: Process Companion Files using the directory mapping
+    # -----------------------------------------------------------------
+    for src in companion_files:
+        rel_path = os.path.relpath(src, MUSIC_DIR)
+        parts = rel_path.split(os.sep)
+        src_dir = os.path.dirname(src)
+        
+        if src_dir in src_dir_to_dst_dir:
+            # Sibling of a mapped audio album folder
+            dst_album_dir = src_dir_to_dst_dir[src_dir]
+            dst_rel = os.path.join(dst_album_dir, parts[-1])
+        else:
+            # Safe generic fallback
+            if len(parts) >= 3:
+                dst_rel = os.path.join(sanitize_name(parts[0]), sanitize_name(parts[1]), parts[-1])
+            elif len(parts) == 2:
+                dst_rel = os.path.join(sanitize_name(parts[0]), parts[-1])
+            else:
+                dst_rel = parts[-1]
+                
+        moves.append((src, os.path.join(MUSIC_DIR, dst_rel)))
+        
+    # -----------------------------------------------------------------
+    # Move Execution and Clean up
+    # -----------------------------------------------------------------
+    actual_moves = [(s, d) for s, d in moves if s != d]
+    
+    if actual_moves:
+        print(f"Reorganizing {len(actual_moves)} files locally...")
+        for src, dst in actual_moves:
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.move(src, dst)
+        
+    # Prune empty directories locally
+    for root, dirs, files in os.walk(MUSIC_DIR, topdown=False):
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            if dir_path == MUSIC_DIR:
+                continue
+            if not os.listdir(dir_path):
+                os.rmdir(dir_path)
+                
+    # -----------------------------------------------------------------
+    # Move Organized Directories to Destination (~/Music)
+    # -----------------------------------------------------------------
+    print(f"\nMoving organized folders to final destination: {DEST_DIR}")
+    moved_count = 0
+    for item in os.listdir(MUSIC_DIR):
+        # Skip organizer.py itself and hidden files
+        if item == os.path.basename(__file__) or item.startswith("."):
+            continue
+        src_item = os.path.join(MUSIC_DIR, item)
+        if os.path.isdir(src_item):
+            dst_item = os.path.join(DEST_DIR, item)
+            print(f" - Merging and moving {item} -> {DEST_DIR}/{item}")
+            merge_move(src_item, dst_item)
+            moved_count += 1
+            
+    if moved_count == 0:
+        print("All folders are already successfully in ~/Music!")
+    else:
+        print("\nAll folders successfully moved to ~/Music!")
+
+if __name__ == "__main__":
+    run()

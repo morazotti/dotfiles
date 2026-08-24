@@ -12,7 +12,9 @@ SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 # Chama o Python isolado pelo pescoço
 VENV_PYTHON="$SCRIPT_DIR/whisper-env/bin/python"
 
-export LD_LIBRARY_PATH=$PWD/whisper-env/lib/python3.14/site-packages/nvidia/cublas/lib:$LD_LIBRARY_PATH
+# ---> A VACINA DO CUDA ENTRA AQUI <---
+export LD_LIBRARY_PATH="$SCRIPT_DIR/whisper-env/lib/python3.14/site-packages/nvidia/cublas/lib:/opt/cuda/lib64:$LD_LIBRARY_PATH"
+
 
 WORK_DIR="$HOME/.cache/sincronizador_work_$$"
 mkdir -p "$WORK_DIR"
