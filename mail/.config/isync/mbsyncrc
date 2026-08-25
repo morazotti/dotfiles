@@ -19,8 +19,8 @@ Path /home/nicolas/.local/share/mail/
 Inbox /home/nicolas/.local/share/mail/inbox
 
 Channel gmail
-Master :gmail-remote:
-Slave :gmail-local:
+Far :gmail-remote:
+Near :gmail-local:
 # Exclude everything under the internal [Gmail] folder, except the interesting folders
 Patterns * ![Gmail]* "[Gmail]/Sent Mail" "[Gmail]/Starred" "[Gmail]/All Mail"
 # Or include everything
@@ -46,8 +46,8 @@ SyncState *
 # Inbox /home/nicolas/.local/share/ufscar-mail/inbox
 # 
 # Channel ufscar
-# Master :ufscar-remote:
-# Slave :ufscar-local:
+# Far :ufscar-remote:
+# Near :ufscar-local:
 # Patterns *
 # Create Both
 # SyncState *
