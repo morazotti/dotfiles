@@ -11,3 +11,6 @@
 
 [commit]
       gpgsign = true
+[safe]
+	directory = /home/nicolas/repos/zmk-config-totem/zmk
+	directory = /home/nicolas/repos/zmk-config-totem/zephyr
