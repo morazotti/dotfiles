@@ -1,0 +1,20 @@
+#!/bin/bash
+
+help () {
+    echo "Usage:"
+    echo "pi-git-init <repository> [main-branch]"
+    exit 1
+}
+
+REPO=$1
+
+[ -z $REPO ] && help
+[ "$1" == "-h" ] && help
+[ "$1" == "--help" ] && help
+[ "$2" == "-h" ] && help
+[ "$2" == "--help" ] && help
+[ "$3" == "-h" ] && help
+[ "$3" == "--help" ] && help
+
+[ -z $2 ] || BRANCH="-b $2"
+ssh git "git init --bare ${REPO%.git}.git $BRANCH" 
