@@ -18,8 +18,12 @@ export JULIAUP_DEPOT_PATH="$XDG_DATA_HOME/julia"
 export KDEHOME="$XDG_CONFIG_HOME"/kde
 export MACHINE_STORAGE_PATH="$XDG_DATA_HOME"/docker-machine
 export MATHEMATICA_USERBASE="$XDG_CONFIG_HOME"/mathematica
-export OPENAI_API_KEY=$(gpg2 -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | awk '/api.openai.com/ {print $NF}')
-export GEMINI_API_KEY=$(gpg2 -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | awk '/generativelanguage.googleapis.com/ {print $NF}')
+AUTHINFO=$(gpg2 -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg)
+export OPENAI_API_KEY=$(printf '%s\n' "$AUTHINFO" | awk '/api.openai.com/ {print $NF}')
+export GEMINI_API_KEY=$(printf '%s\n' "$AUTHINFO" | awk '/generativelanguage.googleapis.com/ {print $NF}')
+export GEMINI_OMNIROUTE="sk-13fef654f5dbc69d-223ac8-dadabada"
+export DWAVE_API_TOKEN=$(printf '%s\n' "$AUTHINFO" | awk '/dwave/ {print $NF}')
+unset AUTHINFO
 export NVM_DIR="$XDG_DATA_HOME"/nvm
 export NMBGIT="$XDG_DATA_HOME"/notmuch/nmbug
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME"/pass

@@ -11,6 +11,9 @@ include "%L"
 <Multi_key> <h> <h>			: "ℏ"  # HBAR
 <Multi_key> <s> <q>			: "√"  # SQUARE ROOT
 
+<Multi_key> <j> <w>			: "「" U300C # Aspa japonesa de abertura
+<Multi_key> <j> <p>			: "」" U300D # Aspa japonesa de fechamento
+
 <Multi_key> <m> <p>			: "∓"  # MP
 <Multi_key> <p> <m>			: "±"  # PM
 <Multi_key> <Multi_key> <r> <o> <f> <l>	: "🤣" # ROFL
